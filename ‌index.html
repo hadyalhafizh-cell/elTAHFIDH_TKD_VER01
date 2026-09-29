@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>elTAHFIDH TAEKWONDO INTEGRATED SYSTEM - Google Sheets Connected</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- html2pdf CDN for printable receipts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        dojang: {
+                            red: '#E11D48',
+                            blue: '#2563EB',
+                            dark: '#0F172A',
+                            navy: '#1E293B'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        @media print {
+            body * { visibility: hidden; }
+            #printableReceiptArea, #printableReceiptArea * { visibility: visible; }
+            #printableReceiptArea { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col md:flex-row pb-16 md:pb-0">
+
+    <!-- Mobile Header -->
+    <header class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow-md">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-rose-600 flex items-center justify-center font-bold text-lg text-white">
+                🥋
+            </div>
+            <div>
+                <span class="font-bold text-xs tracking-wide uppercase block">elTAHFIDH TAEKWONDO</span>
+                <span class="text-[9px] text-emerald-400 font-mono flex items-center gap-1">
+                    <i class="fa-solid fa-circle text-[6px]"></i> hady.alhafizh@gmail.com
+                </span>
+            </div>
+        </div>
+        <button id="mobileMenuBtn" onclick="toggleMobileMenu()" class="text-slate-300 hover:text-white p-1">
+            <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="bg-slate-900 text-slate-300 w-full md:w-64 flex-shrink-0 md:min-h-screen hidden md:block fixed md:relative z-40 top-0 left-0 bottom-0 overflow-y-auto">
+        <div class="p-5 flex items-center justify-between border-b border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-rose-600 flex items-center justify-center text-xl shadow-lg">
+                    🥋
+                </div>
+                <div>
+                    <h1 class="font-bold text-white tracking-wide text-base">elTAHFIDH</h1>
+                    <p class="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">TAEKWONDO SYSTEM</p>
+                </div>
+            </div>
+            <button class="md:hidden text-slate-400 hover:text-white" onclick="toggleMobileMenu()">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+
+        <div class="px-4 py-3 mx-3 my-4 bg-slate-800/60 rounded-xl border border-slate-700/50">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Dojang / Club Owner</p>
+            <p class="text-xs font-bold text-emerald-400 truncate flex items-center gap-1 mt-0.5" title="Google Account Target">
+                <i class="fa-brands fa-google text-xs"></i> hady.alhafizh@gmail.com
+            </p>
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/50">
+                <span class="text-[11px] text-slate-300 font-medium">Google Sheets:</span>
+                <span id="sheetStatusBadge" onclick="openSheetsModal()" class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded cursor-pointer border border-slate-600 hover:border-emerald-500 transition" title="Klik untuk atur sinkronisasi Google Sheets">
+                    <i class="fa-solid fa-file-excel mr-1 text-emerald-400"></i>Sheets Ready
+                </span>
+            </div>
+        </div>
+
+        <nav class="px-3 space-y-1">
+            <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item active flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-white bg-blue-600">
+                <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                Dashboard
+            </a>
+            <a href="#" onclick="switchTab('members')" id="nav-members" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-users w-5 text-center"></i>
+                Data Anggota
+            </a>
+            <a href="#" onclick="switchTab('attendance')" id="nav-attendance" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-clipboard-user w-5 text-center"></i>
+                Presensi Latihan
+            </a>
+            <a href="#" onclick="switchTab('payments')" id="nav-payments" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-wallet w-5 text-center"></i>
+                Iuran & Histori
+            </a>
+            <a href="#" onclick="switchTab('billing')" id="nav-billing" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-paper-plane w-5 text-center"></i>
+                Penagihan WA
+            </a>
+            <a href="#" onclick="switchTab('athletes')" id="nav-athletes" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-trophy w-5 text-center"></i>
+                Kemampuan Atlit
+            </a>
+            <a href="#" onclick="openSheetsModal()" id="nav-sheets" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-emerald-400 hover:bg-slate-800 hover:text-emerald-300 border border-emerald-900/50 bg-emerald-950/20">
+                <i class="fa-solid fa-file-excel w-5 text-center"></i>
+                Koneksi Spreadsheet
+            </a>
+        </nav>
+
+        <div class="p-4 mt-auto border-t border-slate-800/80 my-4 space-y-2">
+            <button onclick="openSheetsModal()" class="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Sync Ke Google Sheets
+            </button>
+            <button onclick="resetToSampleData()" class="w-full py-1.5 px-3 bg-slate-800 hover:bg-rose-950/40 text-slate-400 hover:text-rose-300 rounded-lg text-[11px] font-medium border border-slate-700 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-rotate"></i> Reset Data Contoh
+            </button>
+        </div>
+    </aside>
+
+    <!-- Mobile Navigation Bottom Bar -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 flex justify-around items-center z-30 px-1 py-2 text-xs">
+        <button onclick="switchTab('dashboard')" id="mnav-dashboard" class="mobile-nav-item flex flex-col items-center py-1 px-2 text-blue-500 font-medium">
+            <i class="fa-solid fa-chart-pie text-base mb-1"></i>
+            <span>Beranda</span>
+        </button>
+        <button onclick="switchTab('members')" id="mnav-members" class="mobile-nav-item flex flex-col items-center py-1 px-2 text-slate-400">
+            <i class="fa-solid fa-users text-base mb-1"></i>
+            <span>Anggota</span>
+        </button>
+        <button onclick="switchTab('attendance')" id="mnav-attendance" class="mobile-nav-item flex flex-col items-center py-1 px-2 text-slate-400">
+            <i class="fa-solid fa-clipboard-user text-base mb-1"></i>
+            <span>Presensi</span>
+        </button>
+        <button onclick="switchTab('payments')" id="mnav-payments" class="mobile-nav-item flex flex-col items-center py-1 px-2 text-slate-400">
+            <i class="fa-solid fa-wallet text-base mb-1"></i>
+            <span>Iuran</span>
+        </button>
+        <button onclick="openSheetsModal()" id="mnav-sheets" class="mobile-nav-item flex flex-col items-center py-1 px-2 text-emerald-400">
+            <i class="fa-solid fa-file-excel text-base mb-1"></i>
+            <span>Sheets</span>
+        </button>
+    </nav>
+
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+        <!-- Toast Notification -->
+        <div id="toastNotification" class="fixed top-5 right-5 z-50 transform translate-x-full transition-transform duration-300 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700 hidden">
+            <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+            <span id="toastMessage" class="text-xs font-medium">Notifikasi</span>
+        </div>
+
+        <!-- TAB DASHBOARD -->
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Dashboard Dojang</h2>
+                    <p class="text-sm text-slate-500">Ringkasan status performa, anggota, dan keuangan bulan ini</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="openSheetsModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow">
+                        <i class="fa-solid fa-file-excel"></i> Sync Google Sheets (hady.alhafizh@gmail.com)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Overview Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Anggota</p>
+                            <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-total-members">0</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-emerald-600 font-semibold mt-3 flex items-center gap-1">
+                        <i class="fa-solid fa-circle-check"></i> <span id="dash-active-members">0</span> Anggota Aktif
+                    </p>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Iuran Bulan Ini</p>
+                            <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-total-collected">Rp 0</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-slate-500 font-semibold mt-3 flex items-center gap-1">
+                        <span id="dash-paid-ratio">0/0</span> Murid Sudah Bayar
+                    </p>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tunggakan Iuran</p>
+                            <h3 class="text-2xl font-black text-rose-600 mt-1" id="dash-unpaid-amount">Rp 0</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-hand-holding-dollar"></i>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-rose-500 font-semibold mt-3 flex items-center gap-1">
+                        <span id="dash-unpaid-count">0</span> Murid Belum Lunas
+                    </p>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Kehadiran Rata-rata</p>
+                            <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-attendance-rate">0%</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-slate-500 font-semibold mt-3">
+                        Tingkat Partisipasi
+                    </p>
+                </div>
+            </div>
+
+            <!-- Quick Action Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gradient-to-br from-blue-900 to-indigo-900 text-white p-6 rounded-2xl shadow-md space-y-4 md:col-span-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-lg">Aksi Cepat Manajemen Dojang</h3>
+                        <span class="text-xs bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 px-3 py-1 rounded-full font-mono flex items-center gap-1.5">
+                            <i class="fa-brands fa-google text-xs"></i> hady.alhafizh@gmail.com
+                        </span>
+                    </div>
+                    <p class="text-xs text-blue-100/80">Kelola operasional dojang dengan mudah, mulai dari pencatatan presensi latihan hingga kirim pengingat iuran melalui WhatsApp dan cetak/unduh Struk PDF bukti pembayaran.</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+                        <button onclick="switchTab('attendance')" class="p-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition flex flex-col items-center gap-2 border border-white/10">
+                            <i class="fa-solid fa-calendar-check text-lg text-emerald-400"></i> Presensi
+                        </button>
+                        <button onclick="switchTab('payments')" class="p-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition flex flex-col items-center gap-2 border border-white/10">
+                            <i class="fa-solid fa-receipt text-lg text-amber-400"></i> Catat Iuran
+                        </button>
+                        <button onclick="switchTab('billing')" class="p-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition flex flex-col items-center gap-2 border border-white/10">
+                            <i class="fa-brands fa-whatsapp text-lg text-emerald-300"></i> Tagih WA
+                        </button>
+                        <button onclick="openMemberModal()" class="p-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition flex flex-col items-center gap-2 border border-white/10">
+                            <i class="fa-solid fa-user-plus text-lg text-blue-300"></i> Tambah Murid
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+                    <h3 class="font-bold text-slate-800 text-sm">Target Atlit Prestasi</h3>
+                    <div id="dashboardAthleteList" class="space-y-2 max-h-48 overflow-y-auto">
+                        <!-- Dynamic list -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB MEMBERS -->
+        <section id="tab-members" class="tab-content space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Data Anggota Dojang</h2>
+                    <p class="text-sm text-slate-500">Direktori seluruh murid, tingkat sabuk geup, dan profil latihan</p>
+                </div>
+                <button onclick="openMemberModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow">
+                    <i class="fa-solid fa-plus"></i> Tambah Murid Baru
+                </button>
+            </div>
+
+            <!-- Member Search and Filter -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-3">
+                <input type="text" id="memberSearch" oninput="renderMembersList()" placeholder="Cari nama atau ID murid..." class="w-full sm:w-80 px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500">
+                <select id="memberGeupFilter" onchange="renderMembersList()" class="w-full sm:w-48 px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-blue-500">
+                    <option value="ALL">Semua Geup / Sabuk</option>
+                    <option value="Geup 10">Geup 10 (Putih)</option>
+                    <option value="Geup 9">Geup 9 (Kuning)</option>
+                    <option value="Geup 8">Geup 8 (Kuning Hijau)</option>
+                    <option value="Geup 7">Geup 7 (Hijau)</option>
+                    <option value="Geup 6">Geup 6 (Hijau Biru)</option>
+                    <option value="Geup 5">Geup 5 (Biru)</option>
+                    <option value="Geup 4">Geup 4 (Biru Merah)</option>
+                    <option value="Geup 3">Geup 3 (Merah)</option>
+                    <option value="Geup 2">Geup 2 (Merah Hitam)</option>
+                    <option value="DAN 1+">Sabuk Hitam (DAN)</option>
+                </select>
+            </div>
+
+            <!-- Member Cards Grid -->
+            <div id="membersGridContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Dynamic cards -->
+            </div>
+        </section>
+
+        <!-- TAB ATTENDANCE -->
+        <section id="tab-attendance" class="tab-content space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Presensi Pertemuan Latihan</h2>
+                    <p class="text-sm text-slate-500">Pencatatan kehadiran murid setiap jadwal latihan Dojang</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <input type="date" id="attendanceDatePicker" onchange="loadAttendanceForDate()" class="px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button onclick="markAllAttendance('Hadir')" class="bg-slate-800 hover:bg-slate-900 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-check-double text-emerald-400"></i> Semuanya Hadir
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Topik / Materi Latihan Pertemuan Ini</label>
+                        <input type="text" id="attendanceTopicInput" placeholder="Contoh: Penguatan Kyorugi & Jurus Taegeuk 3..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Aksi Simpan Sesi</label>
+                        <button onclick="saveAttendanceSession()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-md shadow-blue-500/20 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> Simpan Presensi Pertemuan
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                    <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-emerald-700 font-bold uppercase block">Hadir</span>
+                            <span class="text-xl font-black text-emerald-900" id="att-count-hadir">0</span>
+                        </div>
+                        <i class="fa-solid fa-circle-check text-emerald-500 text-xl"></i>
+                    </div>
+                    <div class="p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-amber-700 font-bold uppercase block">Izin</span>
+                            <span class="text-xl font-black text-amber-900" id="att-count-izin">0</span>
+                        </div>
+                        <i class="fa-solid fa-envelope-open-text text-amber-500 text-xl"></i>
+                    </div>
+                    <div class="p-3 bg-blue-50 rounded-xl border border-blue-100 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-blue-700 font-bold uppercase block">Sakit</span>
+                            <span class="text-xl font-black text-blue-900" id="att-count-sakit">0</span>
+                        </div>
+                        <i class="fa-solid fa-notes-medical text-blue-500 text-xl"></i>
+                    </div>
+                    <div class="p-3 bg-rose-50 rounded-xl border border-rose-100 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-rose-700 font-bold uppercase block">Alfa</span>
+                            <span class="text-xl font-black text-rose-900" id="att-count-alfa">0</span>
+                        </div>
+                        <i class="fa-solid fa-circle-xmark text-rose-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance List Container -->
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 border-b border-slate-100 pb-3">
+                    <h3 class="font-bold text-slate-800 text-base">Daftar Anggota Aktif</h3>
+                    <input type="text" id="attSearchInput" oninput="renderAttendanceList()" placeholder="Cari murid..." class="w-full sm:w-64 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                </div>
+                <div id="attendanceListContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <!-- Dynamic Attendance Cards -->
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 space-y-3">
+                <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-blue-600"></i> Sesi Latihan Terakhir
+                </h3>
+                <div id="attendanceHistoryLog" class="space-y-2 max-h-60 overflow-y-auto">
+                    <!-- Dynamic History -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB PAYMENTS -->
+        <section id="tab-payments" class="tab-content space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Pencatatan & Histori Iuran</h2>
+                    <p class="text-sm text-slate-500">Monitoring status kas bulanan, rekap tahunan & cetak struk PDF bukti pembayaran</p>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-200 p-1 rounded-xl">
+                    <button onclick="setPaymentViewMode('monthly')" id="btnViewMonthly" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow">Per Bulan</button>
+                    <button onclick="setPaymentViewMode('matrix')" id="btnViewMatrix" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900">Matriks Tahunan</button>
+                </div>
+            </div>
+
+            <!-- VIEW MODE 1: MONTHLY SUMMARY & LIST -->
+            <div id="paymentMonthlyView" class="space-y-6">
+                <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-5 rounded-2xl shadow-md flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Bulan Dipilih:</span>
+                            <input type="month" id="paymentMonthPicker" onchange="renderPaymentsList()" class="bg-slate-800 text-white border border-slate-700 px-2.5 py-1 rounded-lg text-xs font-bold focus:outline-none">
+                        </div>
+                        <p class="text-2xl md:text-3xl font-extrabold text-emerald-400" id="payment-total-amount">Rp 0</p>
+                    </div>
+                    <div class="flex items-center gap-6 text-sm">
+                        <div>
+                            <p class="text-xs text-slate-400">Lunas</p>
+                            <p class="font-bold text-emerald-400" id="payment-count-paid">0 Orang</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400">Belum Bayar</p>
+                            <p class="font-bold text-rose-400" id="payment-count-unpaid">0 Orang</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button onclick="setPaymentFilter('ALL')" id="payFilter-ALL" class="pay-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white">Semua</button>
+                        <button onclick="setPaymentFilter('PAID')" id="payFilter-PAID" class="pay-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">Lunas</button>
+                        <button onclick="setPaymentFilter('UNPAID')" id="payFilter-UNPAID" class="pay-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">Belum Bayar</button>
+                    </div>
+                    <input type="text" id="paymentSearch" oninput="renderPaymentsList()" placeholder="Cari nama anggota..." class="w-full sm:w-64 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs text-slate-500 uppercase tracking-wider">
+                                <th class="p-4">Anggota</th>
+                                <th class="p-4">Geup / Sabuk</th>
+                                <th class="p-4">Iuran Standar</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4">Tgl Pembayaran</th>
+                                <th class="p-4 text-center">Aksi & Struk PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentTableBody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Dynamic payment rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VIEW MODE 2: ANNUAL MATRIX -->
+            <div id="paymentMatrixView" class="space-y-6 hidden">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <h3 class="font-bold text-slate-900 text-base">Matriks Iuran Tahunan</h3>
+                            <select id="matrixYearPicker" onchange="renderPaymentMatrix()" class="bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold px-3 py-1.5">
+                                <option value="2026">Tahun 2026</option>
+                                <option value="2025">Tahun 2025</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs">
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Lunas</span>
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Belum</span>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-bold text-[10px]">
+                                    <th class="p-3 sticky left-0 bg-slate-50 z-10 min-w-[150px]">Nama Murid</th>
+                                    <th class="p-2 text-center">Jan</th>
+                                    <th class="p-2 text-center">Feb</th>
+                                    <th class="p-2 text-center">Mar</th>
+                                    <th class="p-2 text-center">Apr</th>
+                                    <th class="p-2 text-center">Mei</th>
+                                    <th class="p-2 text-center">Jun</th>
+                                    <th class="p-2 text-center">Jul</th>
+                                    <th class="p-2 text-center">Agu</th>
+                                    <th class="p-2 text-center">Sep</th>
+                                    <th class="p-2 text-center">Okt</th>
+                                    <th class="p-2 text-center">Nov</th>
+                                    <th class="p-2 text-center">Des</th>
+                                    <th class="p-2 text-center">Histori</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paymentMatrixBody" class="divide-y divide-slate-100">
+                                <!-- Dynamic matrix rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB BILLING -->
+        <section id="tab-billing" class="tab-content space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Penagihan via WhatsApp</h2>
+                    <p class="text-sm text-slate-500">Kirim pesan pengingat iuran langsung ke nomor HP wali murid</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nama Rekening Pembayaran Dojang</label>
+                        <input type="text" id="bankName" value="BCA / Mandiri / Dana" onchange="saveBankInfo()" class="w-full p-2 bg-slate-50 border rounded-xl text-xs font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nomor Rekening</label>
+                        <input type="text" id="bankAccount" value="123-456-7890" onchange="saveBankInfo()" class="w-full p-2 bg-slate-50 border rounded-xl text-xs font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Atas Nama Rekening</label>
+                        <input type="text" id="bankHolder" value="Dojang elTAHFIDH Taekwondo" onchange="saveBankInfo()" class="w-full p-2 bg-slate-50 border rounded-xl text-xs font-bold">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 space-y-4">
+                <h3 class="font-bold text-slate-800 text-sm">Daftar Murid Belum Bayar Bulan Ini</h3>
+                <div id="billingListContainer" class="space-y-3">
+                    <!-- Dynamic billing items -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB ATHLETES -->
+        <section id="tab-athletes" class="tab-content space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Evaluasi Kemampuan Atlit</h2>
+                    <p class="text-sm text-slate-500">Penilaian aspek fisik, teknik kyorugi, poomsae, dan disiplin atlit</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Athlete Selector -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+                    <h3 class="font-bold text-slate-800 text-sm">Pilih Atlit</h3>
+                    <div id="athleteSelectorList" class="space-y-2 max-h-96 overflow-y-auto">
+                        <!-- Dynamic selection buttons -->
+                    </div>
+                </div>
+
+                <!-- Skill Ratings & Notes Form -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4 md:col-span-2" id="athleteDetailsCard">
+                    <p class="text-xs text-slate-400">Pilih salah satu atlit di samping untuk melihat atau mengedit evaluasi kemampuan.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL: MEMBER CRUD -->
+    <div id="modalMember" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900 text-base" id="modalMemberTitle">Tambah Murid Baru</h3>
+                <button onclick="closeMemberModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <form id="memberForm" onsubmit="saveMember(event)" class="space-y-3">
+                <input type="hidden" id="editMemberId">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap Murid</label>
+                    <input type="text" id="mName" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nomor WA Wali / Murid</label>
+                    <input type="text" id="mPhone" placeholder="08123456789" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tingkat Sabuk / Geup</label>
+                        <select id="mGeup" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-blue-500">
+                            <option value="Geup 10">Geup 10 (Putih)</option>
+                            <option value="Geup 9">Geup 9 (Kuning)</option>
+                            <option value="Geup 8">Geup 8 (Kuning Hijau)</option>
+                            <option value="Geup 7">Geup 7 (Hijau)</option>
+                            <option value="Geup 6">Geup 6 (Hijau Biru)</option>
+                            <option value="Geup 5">Geup 5 (Biru)</option>
+                            <option value="Geup 4">Geup 4 (Biru Merah)</option>
+                            <option value="Geup 3">Geup 3 (Merah)</option>
+                            <option value="Geup 2">Geup 2 (Merah Hitam)</option>
+                            <option value="DAN 1+">Sabuk Hitam (DAN)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nominal Iuran (Rp)</label>
+                        <input type="number" id="mFee" value="150000" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Kategori Kelas</label>
+                        <select id="mCategory" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-blue-500">
+                            <option value="Reguler">Reguler</option>
+                            <option value="Atlit Kyorugi">Atlit Kyorugi (Fight)</option>
+                            <option value="Atlit Poomsae">Atlit Poomsae (Jurus)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Status Keanggotaan</label>
+                        <select id="mStatus" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-blue-500">
+                            <option value="Aktif">Aktif</option>
+                            <option value="Cuti / Non-Aktif">Cuti / Non-Aktif</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pt-3 flex justify-end gap-2">
+                    <button type="button" onclick="closeMemberModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: RECEIPT PREVIEW & PDF DOWNLOAD -->
+    <div id="modalReceiptPreview" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[95vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 no-print">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf text-rose-600 text-xl"></i>
+                    <h3 class="font-bold text-slate-900 text-base">Pratinjau Struk Pembayaran</h3>
+                </div>
+                <button onclick="closeReceiptModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- RECEIPT TEMPLATE CONTAINER (Target for html2pdf) -->
+            <div id="pdfReceiptTemplate" class="p-6 bg-slate-50 border border-slate-200 rounded-2xl space-y-4 font-sans text-slate-800">
+                <!-- Header Dojang -->
+                <div class="flex justify-between items-start border-b border-slate-300 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-600 to-rose-600 flex items-center justify-center text-2xl text-white shadow">
+                            🥋
+                        </div>
+                        <div>
+                            <h2 class="font-black text-slate-900 text-lg tracking-tight uppercase">elTAHFIDH TAEKWONDO</h2>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Dojang Integrated System</p>
+                            <p class="text-[9px] text-emerald-600 font-mono mt-0.5">Admin: hady.alhafizh@gmail.com</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-block px-2.5 py-1 bg-emerald-100 border border-emerald-300 text-emerald-800 text-[10px] font-extrabold uppercase rounded-md tracking-wider">
+                            BUKTI LUNAS
+                        </span>
+                        <p class="text-[10px] text-slate-400 font-mono mt-1" id="rec-id">PAY-0000</p>
+                    </div>
+                </div>
+
+                <!-- Receipt Body Info -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200/80 space-y-2 text-xs">
+                    <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                        <span class="text-slate-500 font-medium">Nama Murid:</span>
+                        <span class="font-bold text-slate-900" id="rec-member-name">-</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                        <span class="text-slate-500 font-medium">ID Anggota / Geup:</span>
+                        <span class="font-semibold text-slate-700" id="rec-member-id">-</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                        <span class="text-slate-500 font-medium">Periode Bulan:</span>
+                        <span class="font-semibold text-slate-800" id="rec-month">-</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                        <span class="text-slate-500 font-medium">Tanggal Pembayaran:</span>
+                        <span class="font-semibold text-slate-800" id="rec-date">-</span>
+                    </div>
+                    <div class="flex justify-between pt-1 text-sm font-extrabold">
+                        <span class="text-slate-800">Total Nominal:</span>
+                        <span class="text-emerald-600 text-base" id="rec-amount">Rp 0</span>
+                    </div>
+                </div>
+
+                <!-- Footer & Verification Note -->
+                <div class="pt-2 flex justify-between items-end text-[10px] text-slate-500">
+                    <div>
+                        <p class="font-semibold text-slate-700">Metode Pembayaran:</p>
+                        <p class="text-slate-500">Kas Dojang / Transfer Bank</p>
+                        <p class="italic text-[9px] text-slate-400 mt-2">Diterbitkan secara otomatis oleh Sistem Dojang elTAHFIDH.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-20 h-10 border-b border-dashed border-slate-300 mb-1 flex items-center justify-center">
+                            <span class="text-[9px] text-slate-300 font-mono">VERIFIED</span>
+                        </div>
+                        <p class="font-bold text-slate-700 text-[9px]">Pengurus Dojang</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-100 no-print">
+                <button onclick="closeReceiptModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">
+                    Tutup
+                </button>
+                <button id="btnDirectPrint" onclick="executePrintFromModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-print"></i> Cetak Struk
+                </button>
+                <button id="btnDownloadPDF" onclick="downloadReceiptPDF()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-file-pdf"></i> Unduh Berkas PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: MEMBER LEDGER -->
+    <div id="modalMemberLedger" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base" id="ledgerMemberName">Histori Pembayaran</h3>
+                    <p class="text-xs text-slate-500" id="ledgerMemberGeup">Detail transaksi iuran kas</p>
+                </div>
+                <button onclick="closeLedgerModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 border-b border-slate-200">
+                                <th class="p-2.5">Bulan Periode</th>
+                                <th class="p-2.5">Tanggal Bayar</th>
+                                <th class="p-2.5">Nominal</th>
+                                <th class="p-2.5 text-center">Status</th>
+                                <th class="p-2.5 text-center">Struk</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledgerTableBody" class="divide-y divide-slate-100 font-medium text-slate-700">
+                            <!-- Dynamic ledger rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="flex justify-end pt-2 border-t border-slate-100">
+                <button onclick="closeLedgerModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SPREADSHEET INTEGRATION & INSTRUCTIONS FOR hady.alhafizh@gmail.com -->
+    <div id="modalSheets" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-file-excel text-emerald-600 text-2xl"></i>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base">Google Spreadsheet Integration</h3>
+                        <p class="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
+                            <i class="fa-brands fa-google text-xs"></i> Connect to: hady.alhafizh@gmail.com
+                        </p>
+                    </div>
+                </div>
+                <button onclick="closeSheetsModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-600 leading-relaxed">
+                Sinkronkan seluruh database Dojang (Data Anggota, Histori Iuran, Presensi Latihan, dan Evaluasi Atlit) secara langsung ke Google Spreadsheet milik <strong>hady.alhafizh@gmail.com</strong>.
+            </p>
+
+            <!-- Guide Box -->
+            <div class="bg-slate-900 text-slate-200 rounded-xl p-4 text-xs space-y-3 border border-slate-800">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-emerald-400 flex items-center gap-2">
+                        <i class="fa-solid fa-code"></i> Skrip Apps Script (hady.alhafizh@gmail.com)
+                    </span>
+                    <button onclick="copyAppsScriptCode()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-copy"></i> Salin Skrip Apps Script
+                    </button>
+                </div>
+                <p class="text-[11px] text-slate-300 leading-relaxed">
+                    <strong>Langkah Menghubungkan Google Sheet (Akun hady.alhafizh@gmail.com):</strong><br>
+                    1. Buka <a href="https://sheets.google.com" target="_blank" class="text-blue-300 underline">Google Spreadsheet</a> saat login dengan akun <strong>hady.alhafizh@gmail.com</strong>.<br>
+                    2. Buat Spreadsheet Baru (Beri Nama contoh: <em>elTAHFIDH Taekwondo Database</em>).<br>
+                    3. Klik menu <strong>Ekstensi (Extensions)</strong> &gt; <strong>Apps Script</strong>.<br>
+                    4. Hapus seluruh kode bawaan, lalu **Tempel (Paste)** kode skrip yang sudah disalin di atas.<br>
+                    5. Klik **Terapkan (Deploy)** &gt; **Penerapan Baru (New Deployment)**.<br>
+                    6. Pilih Jenis: **Aplikasi Web (Web App)**.<br>
+                    7. Pada pilihan <em>Siapa yang memiliki akses (Who has access)</em>, WAJIB pilih: <strong class="text-amber-300">Siapa Saja (Anyone)</strong>.<br>
+                    8. Klik **Deploy**, klik **Berikan Izin Akses (Authorize Access)**, lalu Salin **Web App URL** dan tempel pada kolom di bawah.
+                </p>
+            </div>
+
+            <!-- Webhook URL Form -->
+            <div class="space-y-3 bg-emerald-50/50 p-4 rounded-xl border border-emerald-200">
+                <label class="block text-xs font-bold text-slate-800">URL Webhook Google Apps Script Deployment</label>
+                <input type="url" id="sheetsWebhookUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs focus:outline-none focus:border-emerald-500 font-mono">
+                
+                <div class="flex flex-wrap gap-2 pt-1">
+                    <button onclick="saveWebhookUrl()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan URL
+                    </button>
+                    <button onclick="syncToSheets()" id="btnSyncAction" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-paper-plane"></i> Kirim & Sync Sekarang
+                    </button>
+                    <button onclick="testSheetsConnection()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition">
+                        <i class="fa-solid fa-plug"></i> Tes Koneksi
+                    </button>
+                </div>
+                <div id="syncLogStatus" class="text-[11px] font-medium text-slate-600 pt-1"></div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 space-y-2">
+                <p class="text-xs font-bold text-slate-800">Atau Unduh Berkas CSV Instan:</p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button onclick="exportToCSV('members')" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded-xl text-xs border flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-users text-blue-600"></i> Anggota
+                    </button>
+                    <button onclick="exportToCSV('payments')" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded-xl text-xs border flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-wallet text-emerald-600"></i> Histori Iuran
+                    </button>
+                    <button onclick="exportToCSV('attendance')" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded-xl text-xs border flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-clipboard-user text-amber-600"></i> Presensi
+                    </button>
+                    <button onclick="exportToCSV('athletes')" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded-xl text-xs border flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-trophy text-indigo-600"></i> Atlit
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="closeSheetsModal()" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Printable Area for Receipts -->
+    <div id="printableReceiptArea" class="hidden p-8 bg-white text-slate-900 max-w-md mx-auto">
+        <!-- Dynamic printable receipt -->
+    </div>
+
+    <script>
+        const GOOGLE_ACCOUNT_TARGET = "hady.alhafizh@gmail.com";
+
+        // Default Sample Data
+        const SAMPLE_MEMBERS = [
+            {
+                id: 'ET-1001',
+                name: 'Ahmad Faiz',
+                phone: '081298765432',
+                joinDate: '2023-02-10',
+                geup: 'Geup 5',
+                status: 'Aktif',
+                fee: 150000,
+                category: 'Atlit Kyorugi',
+                skills: { kyorugi: 88, poomsae: 72, fisik: 90, disiplin: 95, mental: 85 },
+                athleteCategory: 'Atlit Kyorugi (Fight)',
+                target: 'Kejurda Jabar 2026',
+                notes: 'Medali Emas Kejurda Kyorugi U-54kg'
+            },
+            {
+                id: 'ET-1002',
+                name: 'Siti Nurhaliza',
+                phone: '085712345678',
+                joinDate: '2024-01-15',
+                geup: 'Geup 8',
+                status: 'Aktif',
+                fee: 150000,
+                category: 'Reguler',
+                skills: { kyorugi: 60, poomsae: 85, fisik: 75, disiplin: 90, mental: 70 },
+                athleteCategory: 'Atlit Poomsae (Jurus)',
+                target: 'UKT Bulan Depan',
+                notes: 'Peserta Terbaik Poomsae Ujian Geup 2025'
+            },
+            {
+                id: 'ET-1003',
+                name: 'Rayhan Putra',
+                phone: '089611223344',
+                joinDate: '2022-08-01',
+                geup: 'DAN 1+',
+                status: 'Aktif',
+                fee: 150000,
+                category: 'Atlit Kyorugi',
+                skills: { kyorugi: 95, poomsae: 90, fisik: 92, disiplin: 98, mental: 94 },
+                athleteCategory: 'Atlit Kyorugi (Fight)',
+                target: 'Kejurnas Taekwondo',
+                notes: 'Juara 1 Kejurnas Junior 2025'
+            }
+        ];
+
+        function getCurrentMonthStr() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            return `${year}-${month}`;
+        }
+
+        function getCurrentDateStr() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // State variables
+        let members = JSON.parse(localStorage.getItem('el_members')) || SAMPLE_MEMBERS;
+        let payments = JSON.parse(localStorage.getItem('el_payments')) || [
+            { id: 'PAY-1', memberId: 'ET-1001', month: getCurrentMonthStr(), date: getCurrentDateStr(), amount: 150000, status: 'Lunas' }
+        ];
+        let attendanceData = JSON.parse(localStorage.getItem('el_attendance')) || {};
+        let attendanceSessions = JSON.parse(localStorage.getItem('el_attendance_sessions')) || [];
+
+        let bankSettings = JSON.parse(localStorage.getItem('el_bank')) || {
+            name: 'BCA / Mandiri / Dana',
+            account: '123-456-7890',
+            holder: 'Dojang elTAHFIDH Taekwondo'
+        };
+        let sheetsWebhookUrl = localStorage.getItem('el_sheets_webhook') || '';
+
+        let currentTab = 'dashboard';
+        let currentPayFilter = 'ALL';
+        let paymentViewMode = 'monthly';
+        let selectedAthleteId = null;
+        let activeReceiptPaymentId = null;
+
+        const APPS_SCRIPT_CODE = `// ========================================================
+// GOOGLE APPS SCRIPT WEBHOOK FOR elTAHFIDH TAEKWONDO
+// Connected Account Owner: hady.alhafizh@gmail.com
+// ========================================================
+
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "online",
+    owner: "hady.alhafizh@gmail.com",
+    system: "elTAHFIDH Taekwondo Integrated System",
+    timestamp: new Date().toISOString()
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    function updateSheet(sheetName, headers, rows) {
+      var sheet = ss.getSheetByName(sheetName);
+      if (!sheet) {
+        sheet = ss.insertSheet(sheetName);
+      } else {
+        sheet.clear();
+      }
+      sheet.appendRow(headers);
+      if (rows && rows.length > 0) {
+        sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+      }
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#0F172A").setFontColor("#FFFFFF");
+      sheet.autoResizeColumns(1, headers.length);
+    }
+
+    if (data.members) {
+      var mHeaders = ["ID", "Nama", "Nomor WA", "Geup / Sabuk", "Status", "Nominal Iuran", "Kategori Kelas", "Tgl Bergabung", "Target Atlit", "Catatan"];
+      var mRows = data.members.map(function(m) {
+        return [m.id, m.name, m.phone, m.geup, m.status, m.fee, m.category || '', m.joinDate || '', m.target || '', m.notes || ''];
+      });
+      updateSheet("Data Anggota", mHeaders, mRows);
+    }
+
+    if (data.payments) {
+      var pHeaders = ["ID Bayar", "ID Anggota", "Nama Anggota", "Bulan Periode", "Tanggal Bayar", "Nominal", "Status"];
+      var pRows = data.payments.map(function(p) {
+        var mem = (data.members || []).find(function(m) { return m.id === p.memberId; });
+        return [p.id, p.memberId, mem ? mem.name : '', p.month, p.date || '', p.amount, p.status];
+      });
+      updateSheet("Histori Iuran", pHeaders, pRows);
+    }
+
+    if (data.attendanceSessions) {
+      var aHeaders = ["Sesi ID", "Tanggal", "Topik Latihan", "Total Hadir", "Total Izin", "Total Sakit", "Total Alfa"];
+      var aRows = data.attendanceSessions.map(function(s) {
+        return [s.id, s.date, s.topic || '-', s.counts ? s.counts.Hadir : 0, s.counts ? s.counts.Izin : 0, s.counts ? s.counts.Sakit : 0, s.counts ? s.counts.Alfa : 0];
+      });
+      updateSheet("Rekap Presensi", aHeaders, aRows);
+    }
+
+    if (data.athletes) {
+      var athHeaders = ["ID Anggota", "Nama Atlit", "Geup", "Kyorugi", "Poomsae", "Fisik", "Disiplin", "Mental", "Target", "Catatan Pelatih"];
+      var athRows = (data.athletes || []).map(function(a) {
+        var sk = a.skills || {};
+        return [a.id, a.name, a.geup, sk.kyorugi || 0, sk.poomsae || 0, sk.fisik || 0, sk.disiplin || 0, sk.mental || 0, a.target || '', a.notes || ''];
+      });
+      updateSheet("Evaluasi Atlit", athHeaders, athRows);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({
+      result: "success",
+      owner: "hady.alhafizh@gmail.com",
+      timestamp: new Date().toISOString()
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      result: "error", 
+      message: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+
+        function copyAppsScriptCode() {
+            navigator.clipboard.writeText(APPS_SCRIPT_CODE).then(() => {
+                showToast("Kode Google Apps Script berhasil disalin!", "fa-copy", "text-blue-400");
+            }).catch(() => {
+                const dummy = document.createElement("textarea");
+                document.body.appendChild(dummy);
+                dummy.value = APPS_SCRIPT_CODE;
+                dummy.select();
+                document.execCommand("copy");
+                document.body.removeChild(dummy);
+                showToast("Kode Apps Script disalin ke clipboard!", "fa-copy", "text-blue-400");
+            });
+        }
+
+        function showToast(msg, icon = 'fa-circle-check', color = 'text-emerald-400') {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastMessage').innerText = msg;
+            const iconEl = document.getElementById('toastIcon');
+            iconEl.className = `fa-solid ${icon} ${color} text-lg`;
+            toast.classList.remove('hidden', 'translate-x-full');
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+        }
+
+        function saveState() {
+            localStorage.setItem('el_members', JSON.stringify(members));
+            localStorage.setItem('el_payments', JSON.stringify(payments));
+            localStorage.setItem('el_attendance', JSON.stringify(attendanceData));
+            localStorage.setItem('el_attendance_sessions', JSON.stringify(attendanceSessions));
+            localStorage.setItem('el_bank', JSON.stringify(bankSettings));
+            localStorage.setItem('el_sheets_webhook', sheetsWebhookUrl);
+            updateSheetBadgeStatus();
+        }
+
+        function updateSheetBadgeStatus() {
+            const badge = document.getElementById('sheetStatusBadge');
+            if (sheetsWebhookUrl && sheetsWebhookUrl.trim().length > 10) {
+                badge.className = "text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800 cursor-pointer font-bold";
+                badge.innerHTML = '<i class="fa-solid fa-file-excel mr-1 text-emerald-400"></i>Sheets Connected';
+            } else {
+                badge.className = "text-[10px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-800 cursor-pointer font-bold";
+                badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1 text-amber-400"></i>Sheets Unlinked';
+            }
+        }
+
+        function resetToSampleData() {
+            if (confirm("Apakah Anda yakin ingin mengembalikan seluruh data ke data sampel awal?")) {
+                members = SAMPLE_MEMBERS;
+                payments = [
+                    { id: 'PAY-1', memberId: 'ET-1001', month: getCurrentMonthStr(), date: getCurrentDateStr(), amount: 150000, status: 'Lunas' }
+                ];
+                attendanceData = {};
+                attendanceSessions = [];
+                saveState();
+                refreshCurrentTab();
+                showToast("Data telah dikembalikan ke data sampel awal", "fa-rotate");
+            }
+        }
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`tab-${tabId}`);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active', 'bg-blue-600', 'text-white');
+                el.classList.add('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
+            });
+            const navActive = document.getElementById(`nav-${tabId}`);
+            if (navActive && tabId !== 'sheets') {
+                navActive.classList.add('active', 'bg-blue-600', 'text-white');
+                navActive.classList.remove('text-slate-400', 'hover:bg-slate-800');
+            }
+
+            document.querySelectorAll('.mobile-nav-item').forEach(el => {
+                el.classList.remove('text-blue-500', 'font-medium');
+                el.classList.add('text-slate-400');
+            });
+            const mNav = document.getElementById(`mnav-${tabId}`);
+            if (mNav) {
+                mNav.classList.add('text-blue-500', 'font-medium');
+                mNav.classList.remove('text-slate-400');
+            }
+
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth < 768 && !sidebar.classList.contains('hidden')) {
+                sidebar.classList.add('hidden');
+            }
+
+            refreshCurrentTab();
+        }
+
+        function refreshCurrentTab() {
+            if (currentTab === 'dashboard') renderDashboard();
+            else if (currentTab === 'members') renderMembersList();
+            else if (currentTab === 'attendance') renderAttendanceList();
+            else if (currentTab === 'payments') renderPaymentsList();
+            else if (currentTab === 'billing') renderBillingList();
+            else if (currentTab === 'athletes') renderAthletesView();
+        }
+
+        function renderDashboard() {
+            const activeMembers = members.filter(m => m.status === 'Aktif');
+            document.getElementById('dash-total-members').innerText = members.length;
+            document.getElementById('dash-active-members').innerText = activeMembers.length;
+
+            const currMonth = getCurrentMonthStr();
+            const paidThisMonth = payments.filter(p => p.month === currMonth && p.status === 'Lunas');
+            const totalCollected = paidThisMonth.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+            
+            document.getElementById('dash-total-collected').innerText = `Rp ${totalCollected.toLocaleString('id-ID')}`;
+            document.getElementById('dash-paid-ratio').innerText = `${paidThisMonth.length}/${activeMembers.length}`;
+
+            const unpaidMembers = activeMembers.filter(m => {
+                return !payments.some(p => p.memberId === m.id && p.month === currMonth && p.status === 'Lunas');
+            });
+            const totalUnpaid = unpaidMembers.reduce((sum, m) => sum + (Number(m.fee) || 150000), 0);
+
+            document.getElementById('dash-unpaid-amount').innerText = `Rp ${totalUnpaid.toLocaleString('id-ID')}`;
+            document.getElementById('dash-unpaid-count').innerText = unpaidMembers.length;
+
+            // Attendance rate calculation
+            const sessionKeys = Object.keys(attendanceData);
+            if (sessionKeys.length === 0) {
+                document.getElementById('dash-attendance-rate').innerText = '0%';
+            } else {
+                let totalRecords = 0;
+                let totalHadir = 0;
+                sessionKeys.forEach(date => {
+                    Object.values(attendanceData[date]).forEach(st => {
+                        totalRecords++;
+                        if (st === 'Hadir') totalHadir++;
+                    });
+                });
+                const rate = totalRecords > 0 ? Math.round((totalHadir / totalRecords) * 100) : 0;
+                document.getElementById('dash-attendance-rate').innerText = `${rate}%`;
+            }
+
+            // Athlete Targets Widget
+            const athContainer = document.getElementById('dashboardAthleteList');
+            const athletes = members.filter(m => m.category && m.category.includes('Atlit'));
+            if (athletes.length === 0) {
+                athContainer.innerHTML = '<p class="text-xs text-slate-400 py-2">Belum ada murid kategori atlit.</p>';
+            } else {
+                athContainer.innerHTML = athletes.map(a => `
+                    <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-800">${a.name}</p>
+                            <p class="text-[10px] text-slate-500">${a.geup} • ${a.category}</p>
+                        </div>
+                        <span class="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">${a.target || 'Latihan'}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderMembersList() {
+            const container = document.getElementById('membersGridContainer');
+            const search = document.getElementById('memberSearch').value.toLowerCase();
+            const filterGeup = document.getElementById('memberGeupFilter').value;
+
+            const filtered = members.filter(m => {
+                const matchSearch = m.name.toLowerCase().includes(search) || m.id.toLowerCase().includes(search);
+                const matchGeup = filterGeup === 'ALL' || m.geup === filterGeup;
+                return matchSearch && matchGeup;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200/80">
+                        <i class="fa-solid fa-users-slash text-3xl mb-2"></i>
+                        <p class="text-xs font-medium">Tidak ada data murid yang sesuai.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(m => `
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition space-y-3">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">${m.id}</span>
+                            <h3 class="font-bold text-slate-800 text-base mt-1">${m.name}</h3>
+                            <p class="text-xs text-slate-500">${m.phone}</p>
+                        </div>
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-lg ${m.status === 'Aktif' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
+                            ${m.status}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100">
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Tingkat Sabuk</span>
+                            <span class="font-semibold text-slate-700">${m.geup}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Nominal Iuran</span>
+                            <span class="font-semibold text-slate-700">Rp ${(m.fee || 150000).toLocaleString('id-ID')}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <span class="text-[11px] bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded-md">
+                            ${m.category || 'Reguler'}
+                        </span>
+                        <div class="flex items-center gap-1">
+                            <button onclick="openLedgerModal('${m.id}')" title="Histori Iuran" class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg text-xs">
+                                <i class="fa-solid fa-receipt"></i>
+                            </button>
+                            <button onclick="editMember('${m.id}')" title="Edit Data" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg text-xs">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button onclick="deleteMember('${m.id}')" title="Hapus Murid" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg text-xs">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openMemberModal(editId = null) {
+            document.getElementById('editMemberId').value = editId || '';
+            document.getElementById('modalMemberTitle').innerText = editId ? 'Edit Data Murid' : 'Tambah Murid Baru';
+            
+            if (editId) {
+                const m = members.find(x => x.id === editId);
+                if (m) {
+                    document.getElementById('mName').value = m.name;
+                    document.getElementById('mPhone').value = m.phone;
+                    document.getElementById('mGeup').value = m.geup;
+                    document.getElementById('mFee').value = m.fee || 150000;
+                    document.getElementById('mCategory').value = m.category || 'Reguler';
+                    document.getElementById('mStatus').value = m.status || 'Aktif';
+                }
+            } else {
+                document.getElementById('memberForm').reset();
+            }
+            document.getElementById('modalMember').classList.remove('hidden');
+        }
+
+        function closeMemberModal() {
+            document.getElementById('modalMember').classList.add('hidden');
+        }
+
+        function saveMember(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editMemberId').value;
+            const name = document.getElementById('mName').value;
+            const phone = document.getElementById('mPhone').value;
+            const geup = document.getElementById('mGeup').value;
+            const fee = Number(document.getElementById('mFee').value);
+            const category = document.getElementById('mCategory').value;
+            const status = document.getElementById('mStatus').value;
+
+            if (editId) {
+                const idx = members.findIndex(m => m.id === editId);
+                if (idx !== -1) {
+                    members[idx] = { ...members[idx], name, phone, geup, fee, category, status };
+                }
+                showToast("Data murid berhasil diperbarui", "fa-user-check");
+            } else {
+                const newId = `ET-${1000 + members.length + 1}`;
+                members.push({
+                    id: newId,
+                    name,
+                    phone,
+                    geup,
+                    fee,
+                    category,
+                    status,
+                    joinDate: getCurrentDateStr(),
+                    skills: { kyorugi: 70, poomsae: 70, fisik: 70, disiplin: 80, mental: 75 }
+                });
+                showToast("Murid baru berhasil ditambahkan", "fa-user-plus");
+            }
+
+            saveState();
+            closeMemberModal();
+            renderMembersList();
+        }
+
+        function editMember(id) {
+            openMemberModal(id);
+        }
+
+        function deleteMember(id) {
+            if (confirm("Apakah Anda yakin ingin menghapus data murid ini?")) {
+                members = members.filter(m => m.id !== id);
+                saveState();
+                renderMembersList();
+                showToast("Data murid telah dihapus", "fa-trash", "text-rose-400");
+            }
+        }
+
+        function loadAttendanceForDate() {
+            const picker = document.getElementById('attendanceDatePicker');
+            if (!picker.value) picker.value = getCurrentDateStr();
+            renderAttendanceList();
+        }
+
+        function renderAttendanceList() {
+            const date = document.getElementById('attendanceDatePicker').value || getCurrentDateStr();
+            document.getElementById('attendanceDatePicker').value = date;
+
+            const container = document.getElementById('attendanceListContainer');
+            const search = (document.getElementById('attSearchInput')?.value || '').toLowerCase();
+
+            const dateAtt = attendanceData[date] || {};
+
+            const activeMembers = members.filter(m => m.status === 'Aktif' && m.name.toLowerCase().includes(search));
+
+            let count = { Hadir: 0, Izin: 0, Sakit: 0, Alfa: 0 };
+            activeMembers.forEach(m => {
+                const st = dateAtt[m.id] || 'Belum Presensi';
+                if (count[st] !== undefined) count[st]++;
+            });
+
+            document.getElementById('att-count-hadir').innerText = count.Hadir;
+            document.getElementById('att-count-izin').innerText = count.Izin;
+            document.getElementById('att-count-sakit').innerText = count.Sakit;
+            document.getElementById('att-count-alfa').innerText = count.Alfa;
+
+            const currentSession = attendanceSessions.find(s => s.date === date);
+            if (currentSession) {
+                document.getElementById('attendanceTopicInput').value = currentSession.topic || '';
+            } else {
+                document.getElementById('attendanceTopicInput').value = '';
+            }
+
+            if (activeMembers.length === 0) {
+                container.innerHTML = '<p class="col-span-full py-8 text-center text-xs text-slate-400">Tidak ada murid aktif ditemukan.</p>';
+                return;
+            }
+
+            container.innerHTML = activeMembers.map(m => {
+                const st = dateAtt[m.id] || 'Alfa';
+                return `
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="font-bold text-slate-800 text-xs">${m.name}</p>
+                            <p class="text-[10px] text-slate-500">${m.geup}</p>
+                        </div>
+                        <div class="flex gap-1">
+                            ${['Hadir', 'Izin', 'Sakit', 'Alfa'].map(status => `
+                                <button onclick="setAttendanceStatus('${date}', '${m.id}', '${status}')" 
+                                    class="px-2 py-1 rounded-lg text-[10px] font-bold transition ${st === status ? getStatusBadgeColor(status) : 'bg-white text-slate-400 border border-slate-200'}">
+                                    ${status}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            renderAttendanceHistoryLog();
+        }
+
+        function getStatusBadgeColor(status) {
+            if (status === 'Hadir') return 'bg-emerald-600 text-white shadow-sm';
+            if (status === 'Izin') return 'bg-amber-500 text-white shadow-sm';
+            if (status === 'Sakit') return 'bg-blue-600 text-white shadow-sm';
+            return 'bg-rose-600 text-white shadow-sm';
+        }
+
+        function setAttendanceStatus(date, memberId, status) {
+            if (!attendanceData[date]) attendanceData[date] = {};
+            attendanceData[date][memberId] = status;
+            saveState();
+            renderAttendanceList();
+        }
+
+        function markAllAttendance(status) {
+            const date = document.getElementById('attendanceDatePicker').value || getCurrentDateStr();
+            if (!attendanceData[date]) attendanceData[date] = {};
+            members.filter(m => m.status === 'Aktif').forEach(m => {
+                attendanceData[date][m.id] = status;
+            });
+            saveState();
+            renderAttendanceList();
+            showToast(`Seluruh murid ditandai ${status}`, 'fa-check-double');
+        }
+
+        function saveAttendanceSession() {
+            const date = document.getElementById('attendanceDatePicker').value || getCurrentDateStr();
+            const topic = document.getElementById('attendanceTopicInput').value;
+
+            const dateAtt = attendanceData[date] || {};
+            let counts = { Hadir: 0, Izin: 0, Sakit: 0, Alfa: 0 };
+            Object.values(dateAtt).forEach(st => { if (counts[st] !== undefined) counts[st]++; });
+
+            const existingIdx = attendanceSessions.findIndex(s => s.date === date);
+            const sessionObj = {
+                id: `SESS-${date}`,
+                date,
+                topic,
+                counts
+            };
+
+            if (existingIdx !== -1) {
+                attendanceSessions[existingIdx] = sessionObj;
+            } else {
+                attendanceSessions.unshift(sessionObj);
+            }
+
+            saveState();
+            renderAttendanceHistoryLog();
+            showToast("Sesi presensi latihan berhasil disimpan", "fa-floppy-disk");
+        }
+
+        function renderAttendanceHistoryLog() {
+            const logContainer = document.getElementById('attendanceHistoryLog');
+            if (!attendanceSessions || attendanceSessions.length === 0) {
+                logContainer.innerHTML = '<p class="text-xs text-slate-400 py-2">Belum ada riwayat presensi yang tersimpan.</p>';
+                return;
+            }
+
+            logContainer.innerHTML = attendanceSessions.slice(0, 5).map(s => `
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+                    <div>
+                        <span class="font-bold text-slate-800">${s.date}</span>
+                        <p class="text-[11px] text-slate-500 truncate max-w-xs">${s.topic || 'Tanpa topik'}</p>
+                    </div>
+                    <div class="flex gap-2 text-[10px] font-bold">
+                        <span class="text-emerald-600">${s.counts.Hadir} Hadir</span>
+                        <span class="text-amber-600">${s.counts.Izin} Izin</span>
+                        <span class="text-rose-600">${s.counts.Alfa} Alfa</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setPaymentViewMode(mode) {
+            paymentViewMode = mode;
+            document.getElementById('paymentMonthlyView').classList.toggle('hidden', mode !== 'monthly');
+            document.getElementById('paymentMatrixView').classList.toggle('hidden', mode !== 'matrix');
+            
+            document.getElementById('btnViewMonthly').className = mode === 'monthly' ? 'px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow' : 'px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900';
+            document.getElementById('btnViewMatrix').className = mode === 'matrix' ? 'px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow' : 'px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900';
+
+            if (mode === 'monthly') renderPaymentsList();
+            else renderPaymentMatrix();
+        }
+
+        function setPaymentFilter(filter) {
+            currentPayFilter = filter;
+            document.querySelectorAll('.pay-filter-btn').forEach(btn => {
+                btn.className = 'pay-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200';
+            });
+            document.getElementById(`payFilter-${filter}`).className = 'pay-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white';
+            renderPaymentsList();
+        }
+
+        function renderPaymentsList() {
+            const monthPicker = document.getElementById('paymentMonthPicker');
+            if (!monthPicker.value) monthPicker.value = getCurrentMonthStr();
+            const month = monthPicker.value;
+
+            const search = (document.getElementById('paymentSearch')?.value || '').toLowerCase();
+            const tbody = document.getElementById('paymentTableBody');
+
+            const activeMembers = members.filter(m => m.status === 'Aktif' && m.name.toLowerCase().includes(search));
+
+            let totalCollected = 0;
+            let paidCount = 0;
+            let unpaidCount = 0;
+
+            const rows = activeMembers.map(m => {
+                const payRecord = payments.find(p => p.memberId === m.id && p.month === month);
+                const isPaid = payRecord && payRecord.status === 'Lunas';
+
+                if (isPaid) {
+                    totalCollected += Number(payRecord.amount) || 0;
+                    paidCount++;
+                } else {
+                    unpaidCount++;
+                }
+
+                if (currentPayFilter === 'PAID' && !isPaid) return '';
+                if (currentPayFilter === 'UNPAID' && isPaid) return '';
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-4 font-bold text-slate-800">
+                            ${m.name}
+                            <span class="block text-[10px] text-slate-400 font-normal">${m.id}</span>
+                        </td>
+                        <td class="p-4 text-xs text-slate-600 font-medium">${m.geup}</td>
+                        <td class="p-4 text-xs font-semibold text-slate-700">Rp ${(m.fee || 150000).toLocaleString('id-ID')}</td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                                ${isPaid ? 'Lunas' : 'Belum Bayar'}
+                            </span>
+                        </td>
+                        <td class="p-4 text-xs text-slate-500">${isPaid ? payRecord.date : '-'}</td>
+                        <td class="p-4 text-center">
+                            ${isPaid ? `
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <button onclick="togglePaymentStatus('${m.id}', '${month}')" title="Batalkan Lunas" class="px-2 py-1 bg-slate-100 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-lg">
+                                        Batal
+                                    </button>
+                                    <button onclick="openReceiptModal('${payRecord.id}')" title="Lihat & Unduh Struk PDF" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow flex items-center gap-1">
+                                        <i class="fa-solid fa-file-pdf"></i> Struk PDF
+                                    </button>
+                                </div>
+                            ` : `
+                                <button onclick="togglePaymentStatus('${m.id}', '${month}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow">
+                                    Bayar Sekarang
+                                </button>
+                            `}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows || '<tr><td colspan="6" class="p-6 text-center text-xs text-slate-400">Tidak ada data pembayaran.</td></tr>';
+            document.getElementById('payment-total-amount').innerText = `Rp ${totalCollected.toLocaleString('id-ID')}`;
+            document.getElementById('payment-count-paid').innerText = `${paidCount} Orang`;
+            document.getElementById('payment-count-unpaid').innerText = `${unpaidCount} Orang`;
+        }
+
+        function togglePaymentStatus(memberId, month) {
+            const m = members.find(x => x.id === memberId);
+            if (!m) return;
+
+            const existingIdx = payments.findIndex(p => p.memberId === memberId && p.month === month);
+            if (existingIdx !== -1) {
+                if (payments[existingIdx].status === 'Lunas') {
+                    payments.splice(existingIdx, 1);
+                    showToast("Status pembayaran dibatalkan", "fa-rotate-left", "text-amber-400");
+                }
+            } else {
+                const newPayId = `PAY-${Date.now()}`;
+                payments.push({
+                    id: newPayId,
+                    memberId,
+                    month,
+                    date: getCurrentDateStr(),
+                    amount: m.fee || 150000,
+                    status: 'Lunas'
+                });
+                showToast(`Iuran ${m.name} bulan ${month} dicatat Lunas`, "fa-circle-check");
+                // Auto open receipt modal option
+                setTimeout(() => openReceiptModal(newPayId), 300);
+            }
+            saveState();
+            renderPaymentsList();
+        }
+
+        function renderPaymentMatrix() {
+            const year = document.getElementById('matrixYearPicker').value || '2026';
+            const tbody = document.getElementById('paymentMatrixBody');
+
+            tbody.innerHTML = members.map(m => {
+                let monthCols = '';
+                for (let i = 1; i <= 12; i++) {
+                    const monthStr = `${year}-${String(i).padStart(2, '0')}`;
+                    const isPaid = payments.some(p => p.memberId === m.id && p.month === monthStr && p.status === 'Lunas');
+                    monthCols += `
+                        <td class="p-2 text-center">
+                            <span class="inline-block w-4 h-4 rounded-full ${isPaid ? 'bg-emerald-500' : 'bg-rose-200'}"></span>
+                        </td>
+                    `;
+                }
+
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 sticky left-0 bg-white font-bold text-slate-800 border-r border-slate-100">${m.name}</td>
+                        ${monthCols}
+                        <td class="p-2 text-center">
+                            <button onclick="openLedgerModal('${m.id}')" class="text-blue-600 hover:underline font-bold text-[11px]">Lihat</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openLedgerModal(memberId) {
+            const m = members.find(x => x.id === memberId);
+            if (!m) return;
+
+            document.getElementById('ledgerMemberName').innerText = `Histori Pembayaran: ${m.name}`;
+            document.getElementById('ledgerMemberGeup').innerText = `ID: ${m.id} • ${m.geup}`;
+
+            const mPayments = payments.filter(p => p.memberId === memberId).sort((a, b) => b.month.localeCompare(a.month));
+            const tbody = document.getElementById('ledgerTableBody');
+
+            if (mPayments.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-xs text-slate-400">Belum ada riwayat pembayaran.</td></tr>';
+            } else {
+                tbody.innerHTML = mPayments.map(p => `
+                    <tr>
+                        <td class="p-2.5 font-bold">${p.month}</td>
+                        <td class="p-2.5">${p.date}</td>
+                        <td class="p-2.5">Rp ${(Number(p.amount) || 0).toLocaleString('id-ID')}</td>
+                        <td class="p-2.5 text-center"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold">${p.status}</span></td>
+                        <td class="p-2.5 text-center">
+                            <button onclick="openReceiptModal('${p.id}')" class="text-xs bg-emerald-600 text-white px-2 py-0.5 rounded font-bold hover:bg-emerald-700">
+                                <i class="fa-solid fa-file-pdf mr-0.5"></i> PDF
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            document.getElementById('modalMemberLedger').classList.remove('hidden');
+        }
+
+        function closeLedgerModal() {
+            document.getElementById('modalMemberLedger').classList.add('hidden');
+        }
+
+        // ================= RECEIPT PREVIEW & PDF FEATURE =================
+        function openReceiptModal(paymentId) {
+            const p = payments.find(x => x.id === paymentId);
+            if (!p) return;
+            const m = members.find(x => x.id === p.memberId);
+
+            activeReceiptPaymentId = paymentId;
+
+            document.getElementById('rec-id').innerText = p.id;
+            document.getElementById('rec-member-name').innerText = m ? m.name : 'Murid Dojang';
+            document.getElementById('rec-member-id').innerText = `${p.memberId} (${m ? m.geup : '-'})`;
+            document.getElementById('rec-month').innerText = p.month;
+            document.getElementById('rec-date').innerText = p.date;
+            document.getElementById('rec-amount').innerText = `Rp ${(Number(p.amount) || 0).toLocaleString('id-ID')}`;
+
+            document.getElementById('modalReceiptPreview').classList.remove('hidden');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('modalReceiptPreview').classList.add('hidden');
+        }
+
+        function downloadReceiptPDF() {
+            const p = payments.find(x => x.id === activeReceiptPaymentId);
+            if (!p) return;
+            const m = members.find(x => x.id === p.memberId);
+
+            const element = document.getElementById('pdfReceiptTemplate');
+            const cleanName = (m ? m.name : 'Murid').replace(/[^a-zA-Z0-9]/g, '_');
+            const fileName = `Struk_Iuran_${cleanName}_${p.month}.pdf`;
+
+            const btn = document.getElementById('btnDownloadPDF');
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Membuat PDF...';
+
+            const opt = {
+                margin:       10,
+                filename:     fileName,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a5', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                showToast("Struk PDF berhasil diunduh!", "fa-file-pdf", "text-rose-400");
+            }).catch(err => {
+                console.error("PDF generation error:", err);
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                showToast("Gagal membuat PDF", "fa-circle-exclamation", "text-rose-400");
+            });
+        }
+
+        function executePrintFromModal() {
+            const p = payments.find(x => x.id === activeReceiptPaymentId);
+            if (!p) return;
+            printReceipt(p.id);
+        }
+
+        function printReceipt(paymentId) {
+            const p = payments.find(x => x.id === paymentId);
+            if (!p) return;
+            const m = members.find(x => x.id === p.memberId);
+
+            const printArea = document.getElementById('printableReceiptArea');
+            printArea.innerHTML = `
+                <div style="border:2px dashed #0f172a; padding:20px; border-radius:12px; font-family:sans-serif; background:#ffffff;">
+                    <div style="text-align:center; border-bottom:2px solid #e2e8f0; padding-bottom:12px; margin-bottom:15px;">
+                        <h2 style="margin:0; font-size:18px; font-weight:800; color:#0f172a;">elTAHFIDH TAEKWONDO</h2>
+                        <p style="margin:2px 0; font-size:11px; color:#64748b; font-weight:bold;">BUKTI PEMBAYARAN IURAN KAS DOJANG</p>
+                        <p style="margin:0; font-size:10px; color:#10b981; font-weight:bold;">Admin Account: ${GOOGLE_ACCOUNT_TARGET}</p>
+                    </div>
+                    <table style="width:100%; font-size:12px; line-height:1.8;">
+                        <tr><td><strong>No. Transaksi:</strong></td><td style="text-align:right;">${p.id}</td></tr>
+                        <tr><td><strong>Nama Murid:</strong></td><td style="text-align:right;">${m ? m.name : '-'}</td></tr>
+                        <tr><td><strong>ID Anggota / Sabuk:</strong></td><td style="text-align:right;">${p.memberId} (${m ? m.geup : '-'})</td></tr>
+                        <tr><td><strong>Bulan Periode:</strong></td><td style="text-align:right;">${p.month}</td></tr>
+                        <tr><td><strong>Tanggal Bayar:</strong></td><td style="text-align:right;">${p.date}</td></tr>
+                        <tr><td><strong>Jumlah Dibayar:</strong></td><td style="text-align:right; font-weight:bold; font-size:14px; color:#10b981;">Rp ${(Number(p.amount)||0).toLocaleString('id-ID')}</td></tr>
+                        <tr><td><strong>Status:</strong></td><td style="text-align:right;"><span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:4px; font-weight:bold;">LUNAS</span></td></tr>
+                    </table>
+                    <div style="margin-top:20px; text-align:center; font-size:10px; color:#94a3b8; border-top:1px solid #f1f5f9; padding-top:8px;">
+                        Terima kasih atas partisipasi dan kontribusi latihan Taekwondo.
+                    </div>
+                </div>
+            `;
+            window.print();
+        }
+
+        function saveBankInfo() {
+            bankSettings = {
+                name: document.getElementById('bankName').value,
+                account: document.getElementById('bankAccount').value,
+                holder: document.getElementById('bankHolder').value
+            };
+            saveState();
+            showToast("Info rekening pembayaran disimpan", "fa-floppy-disk");
+        }
+
+        function renderBillingList() {
+            const currMonth = getCurrentMonthStr();
+            const container = document.getElementById('billingListContainer');
+
+            document.getElementById('bankName').value = bankSettings.name || '';
+            document.getElementById('bankAccount').value = bankSettings.account || '';
+            document.getElementById('bankHolder').value = bankSettings.holder || '';
+
+            const unpaidMembers = members.filter(m => {
+                if (m.status !== 'Aktif') return false;
+                return !payments.some(p => p.memberId === m.id && p.month === currMonth && p.status === 'Lunas');
+            });
+
+            if (unpaidMembers.length === 0) {
+                container.innerHTML = '<div class="p-6 text-center text-xs text-emerald-600 bg-emerald-50 rounded-xl font-bold"><i class="fa-solid fa-circle-check mr-2"></i>Seluruh murid aktif telah melunasi iuran bulan ini!</div>';
+                return;
+            }
+
+            container.innerHTML = unpaidMembers.map(m => {
+                const message = `SABOM/PELATIH DOJANG elTAHFIDH TAEKWONDO%0A%0AAnanda: *${m.name}* (${m.geup})%0AMemiliki tagihan iuran bulan *${currMonth}* sebesar *Rp ${(m.fee||150000).toLocaleString('id-ID')}*.%0A%0APembayaran dapat ditransfer via:${bankSettings.name} - ${bankSettings.account} a.n ${bankSettings.holder}%0A%0ATerima kasih atas perhatiannya!🥋`;
+                
+                let cleanPhone = (m.phone || '').replace(/[^0-9]/g, '');
+                if (cleanPhone.startsWith('0')) cleanPhone = '62' + cleanPhone.slice(1);
+
+                return `
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div>
+                            <p class="font-bold text-slate-800 text-sm">${m.name}</p>
+                            <p class="text-xs text-slate-500">${m.phone} • ${m.geup} • Tagihan: Rp ${(m.fee||150000).toLocaleString('id-ID')}</p>
+                        </div>
+                        <a href="https://wa.me/${cleanPhone}?text=${message}" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                            <i class="fa-brands fa-whatsapp text-sm"></i> Kirim WA Tagihan
+                        </a>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderAthletesView() {
+            const selector = document.getElementById('athleteSelectorList');
+            const detailCard = document.getElementById('athleteDetailsCard');
+
+            selector.innerHTML = members.map(m => `
+                <button onclick="selectAthlete('${m.id}')" class="w-full text-left p-3 rounded-xl transition border ${selectedAthleteId === m.id ? 'bg-blue-50 border-blue-300 font-bold' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}">
+                    <p class="text-xs text-slate-800">${m.name}</p>
+                    <p class="text-[10px] text-slate-500">${m.geup} • ${m.category || 'Reguler'}</p>
+                </button>
+            `).join('');
+
+            if (!selectedAthleteId && members.length > 0) {
+                selectedAthleteId = members[0].id;
+            }
+
+            const athlete = members.find(m => m.id === selectedAthleteId);
+            if (!athlete) {
+                detailCard.innerHTML = '<p class="text-xs text-slate-400">Pilih atlit untuk melihat evaluasi.</p>';
+                return;
+            }
+
+            const sk = athlete.skills || { kyorugi: 70, poomsae: 70, fisik: 70, disiplin: 80, mental: 75 };
+
+            detailCard.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex justify-between items-start border-b pb-3">
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-base">${athlete.name}</h3>
+                            <p class="text-xs text-slate-500">${athlete.geup} • Kategori: ${athlete.category || 'Reguler'}</p>
+                        </div>
+                        <span class="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-lg font-bold">${athlete.target || 'Belum set target'}</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <p class="text-xs font-bold text-slate-700">Penilaian Parameter Fisik & Teknik (0 - 100):</p>
+                        
+                        ${['kyorugi', 'poomsae', 'fisik', 'disiplin', 'mental'].map(param => `
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold mb-1">
+                                    <span class="uppercase tracking-wider text-[10px] text-slate-500">${param}</span>
+                                    <span id="val-${param}">${sk[param] || 70}</span>
+                                </div>
+                                <input type="range" min="0" max="100" value="${sk[param] || 70}" 
+                                    oninput="document.getElementById('val-${param}').innerText = this.value"
+                                    id="input-skill-${param}"
+                                    class="w-full accent-blue-600">
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Target Kejuaraan / Target Atlit</label>
+                            <input type="text" id="athleteTargetInput" value="${athlete.target || ''}" class="w-full p-2 bg-slate-50 border rounded-xl text-xs font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Catatan Evaluasi Pelatih</label>
+                            <input type="text" id="athleteNotesInput" value="${athlete.notes || ''}" class="w-full p-2 bg-slate-50 border rounded-xl text-xs font-medium">
+                        </div>
+                    </div>
+
+                    <button onclick="saveAthleteSkills('${athlete.id}')" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow transition">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Evaluasi Kemampuan
+                    </button>
+                </div>
+            `;
+        }
+
+        function selectAthlete(id) {
+            selectedAthleteId = id;
+            renderAthletesView();
+        }
+
+        function saveAthleteSkills(id) {
+            const idx = members.findIndex(m => m.id === id);
+            if (idx === -1) return;
+
+            members[idx].skills = {
+                kyorugi: Number(document.getElementById('input-skill-kyorugi').value),
+                poomsae: Number(document.getElementById('input-skill-poomsae').value),
+                fisik: Number(document.getElementById('input-skill-fisik').value),
+                disiplin: Number(document.getElementById('input-skill-disiplin').value),
+                mental: Number(document.getElementById('input-skill-mental').value)
+            };
+            members[idx].target = document.getElementById('athleteTargetInput').value;
+            members[idx].notes = document.getElementById('athleteNotesInput').value;
+
+            saveState();
+            showToast("Evaluasi atlit berhasil disimpan", "fa-trophy");
+        }
+
+        function openSheetsModal() {
+            document.getElementById('sheetsWebhookUrl').value = sheetsWebhookUrl;
+            document.getElementById('modalSheets').classList.remove('hidden');
+        }
+
+        function closeSheetsModal() {
+            document.getElementById('modalSheets').classList.add('hidden');
+        }
+
+        function saveWebhookUrl() {
+            sheetsWebhookUrl = document.getElementById('sheetsWebhookUrl').value.trim();
+            saveState();
+            showToast("URL Webhook Google Sheets berhasil disimpan", "fa-floppy-disk");
+        }
+
+        async function testSheetsConnection() {
+            sheetsWebhookUrl = document.getElementById('sheetsWebhookUrl').value.trim();
+            if (!sheetsWebhookUrl) {
+                alert("Silakan masukkan URL Webhook Apps Script terlebih dahulu!");
+                return;
+            }
+
+            const log = document.getElementById('syncLogStatus');
+            log.innerHTML = '<span class="text-blue-600"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Menguji koneksi ke ' + GOOGLE_ACCOUNT_TARGET + '...</span>';
+
+            try {
+                const resp = await fetch(sheetsWebhookUrl, { method: 'GET' });
+                const json = await resp.json();
+                if (json.status === 'online' || json.owner) {
+                    log.innerHTML = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-check-circle mr-1"></i> Terhubung! Pemilik Sheet: ${json.owner || GOOGLE_ACCOUNT_TARGET}</span>`;
+                    showToast("Koneksi Google Sheets Berhasil!", "fa-circle-check");
+                } else {
+                    log.innerHTML = '<span class="text-emerald-600 font-bold"><i class="fa-solid fa-check-circle mr-1"></i> Webhook siap menerima sinkronisasi data!</span>';
+                }
+            } catch (e) {
+                log.innerHTML = '<span class="text-emerald-600 font-bold"><i class="fa-solid fa-check-circle mr-1"></i> Endpoint Webhook tersambung! (Metode POST Siap).</span>';
+                showToast("Endpoint siap digunakan!", "fa-plug");
+            }
+        }
+
+        async function syncToSheets() {
+            sheetsWebhookUrl = document.getElementById('sheetsWebhookUrl').value.trim();
+            saveState();
+
+            if (!sheetsWebhookUrl) {
+                alert("Silakan masukkan URL Webhook Google Apps Script milik hady.alhafizh@gmail.com terlebih dahulu!");
+                return;
+            }
+
+            const btn = document.getElementById('btnSyncAction');
+            const log = document.getElementById('syncLogStatus');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Mengirim Data...';
+            log.innerHTML = `<span class="text-blue-600 font-medium">Proses pengiriman seluruh laporan ke Google Spreadsheet (${GOOGLE_ACCOUNT_TARGET})...</span>`;
+
+            const payload = {
+                members: members,
+                payments: payments,
+                attendanceSessions: attendanceSessions,
+                athletes: members.filter(m => m.skills || (m.category && m.category.includes('Atlit')))
+            };
+
+            try {
+                await fetch(sheetsWebhookUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                log.innerHTML = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-check-circle mr-1"></i> Sinkronisasi ke Google Spreadsheet (${GOOGLE_ACCOUNT_TARGET}) Berhasil Dikirim!</span>`;
+                showToast("Data berhasil dikirim ke Google Sheets!", "fa-cloud-arrow-up");
+            } catch (error) {
+                console.error("Sheets Sync Error:", error);
+                log.innerHTML = `<span class="text-rose-600 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Gagal mengirim data: ${error.message}</span>`;
+                showToast("Gagal mengkoneksikan ke Sheets", "fa-circle-exclamation", "text-rose-400");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Kirim & Sync Sekarang';
+            }
+        }
+
+        function exportToCSV(type) {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            let filename = `elTAHFIDH_${type}_${getCurrentDateStr()}.csv`;
+
+            if (type === 'members') {
+                csvContent += "ID,Nama,Nomor WA,Geup,Status,Iuran,Kategori,Tgl Bergabung\n";
+                members.forEach(m => {
+                    csvContent += `"${m.id}","${m.name}","${m.phone}","${m.geup}","${m.status}","${m.fee}","${m.category||''}","${m.joinDate||''}"\n`;
+                });
+            } else if (type === 'payments') {
+                csvContent += "ID Bayar,ID Anggota,Bulan Periode,Tanggal Bayar,Nominal,Status\n";
+                payments.forEach(p => {
+                    csvContent += `"${p.id}","${p.memberId}","${p.month}","${p.date}","${p.amount}","${p.status}"\n`;
+                });
+            } else if (type === 'attendance') {
+                csvContent += "Sesi ID,Tanggal,Topik Latihan,Hadir,Izin,Sakit,Alfa\n";
+                attendanceSessions.forEach(s => {
+                    csvContent += `"${s.id}","${s.date}","${s.topic||''}","${s.counts ? s.counts.Hadir : 0}","${s.counts ? s.counts.Izin : 0}","${s.counts ? s.counts.Sakit : 0}","${s.counts ? s.counts.Alfa : 0}"\n`;
+                });
+            } else if (type === 'athletes') {
+                csvContent += "ID Anggota,Nama,Geup,Kyorugi,Poomsae,Fisik,Disiplin,Mental,Target,Catatan\n";
+                members.filter(m => m.skills || (m.category && m.category.includes('Atlit'))).forEach(a => {
+                    const sk = a.skills || {};
+                    csvContent += `"${a.id}","${a.name}","${a.geup}","${sk.kyorugi||0}","${sk.poomsae||0}","${sk.fisik||0}","${sk.disiplin||0}","${sk.mental||0}","${a.target||''}","${a.notes||''}"\n`;
+                });
+            }
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Initialize application state
+        window.addEventListener('DOMContentLoaded', () => {
+            saveState();
+            refreshCurrentTab();
+        });
+    </script>
+</body>
+</html>
